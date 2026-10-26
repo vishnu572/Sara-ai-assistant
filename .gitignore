@@ -1,0 +1,14 @@
+.env
+.env.local
+.env.*.local
+!.env.example
+.venv/
+.idea/
+__pycache__/
+*.py[cod]
+*.db
+.pytest_cache/
+outputs/*
+!outputs/.gitkeep
+uploads/*
+!uploads/.gitkeep

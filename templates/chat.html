@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+
+{% block title %}Sara AI — Chat Assistant{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">
+{% endblock %}
+
+{% block body_class %}chat-body{% endblock %}
+
+{% block content %}
+<div class="chat-layout">
+  <!-- SIDEBAR -->
+  <aside class="chat-sidebar" id="chat-sidebar">
+    <div class="sidebar-header">
+      <a href="/" class="brand-link" title="Return to Home">
+        <div class="brand-logo-small">✨</div>
+        <div class="brand-text">
+          <span class="brand-name">Sara AI</span>
+          <span class="brand-sub">Chat Assistant</span>
+        </div>
+      </a>
+      <button class="btn-icon mobile-only" id="close-sidebar-btn" title="Close Sidebar">&times;</button>
+    </div>
+
+    <!-- New Chat Button -->
+    <div class="sidebar-action">
+      <button class="btn btn-primary btn-block" id="new-chat-btn">
+        <span class="icon">+</span> New Chat
+      </button>
+    </div>
+
+    <!-- Conversation History List -->
+    <div class="sidebar-history-container">
+      <div class="history-section-title">Recent Conversations</div>
+      <div class="conversation-list" id="conversation-list">
+        {% if conversations %}
+          {% for conv in conversations %}
+          <div class="conv-item" data-id="{{ conv.id }}">
+            <span class="conv-icon">💬</span>
+            <span class="conv-title" title="{{ conv.title }}">{{ conv.title }}</span>
+            <button class="conv-delete-btn" title="Delete conversation" data-id="{{ conv.id }}">&times;</button>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="empty-history" id="empty-history-notice">No past conversations yet.</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Sidebar Tools & Navigation Footer -->
+    <div class="sidebar-footer">
+      <button class="footer-tool-btn" id="open-file-tools-btn" title="PDF & Image Tools">
+        <span class="icon">🛠️</span> File Tools
+      </button>
+      <button class="footer-tool-btn" id="clear-chat-btn" title="Clear this chat">
+        <span class="icon">🗑️</span> Clear Chat
+      </button>
+      <a href="/voice" class="footer-tool-btn highlight" title="Switch to Voice Assistant">
+        <span class="icon">🎙️</span> Voice Assistant &rarr;
+      </a>
+    </div>
+  </aside>
+
+  <!-- MAIN CHAT CONTAINER -->
+  <main class="chat-main">
+    <!-- Top Bar Header -->
+    <header class="chat-topbar">
+      <div class="topbar-left">
+        <button class="btn-icon sidebar-toggle-btn" id="toggle-sidebar-btn" title="Toggle Sidebar">
+          ☰
+        </button>
+        <div class="active-chat-info">
+          <h2 id="active-chat-title">New Conversation</h2>
+          <div class="chat-status-pill">
+            <span class="status-dot online"></span>
+            <span class="status-provider-text" id="active-provider-label">{{ status.active_provider }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="topbar-right">
+        <a href="/voice" class="btn btn-outline-accent voice-mode-btn">
+          <span class="icon">🎙️</span> Voice Mode
+        </a>
+        <button class="btn-icon" id="open-settings-topbar-btn" title="Settings">
+          ⚙️
+        </button>
+      </div>
+    </header>
+
+    <!-- Scrollable Messages Feed -->
+    <div class="chat-feed" id="chat-feed">
+      <!-- Welcome Message Card (Default on empty chat) -->
+      <div class="welcome-card" id="welcome-card">
+        <div class="welcome-avatar">✨</div>
+        <h3>Hello, I'm Sara AI!</h3>
+        <p>Your personal assistant for intelligent chat, code development, voice interaction, and smart document tools. How can I help you today?</p>
+        
+        <!-- Suggested Prompts Grid -->
+        <div class="suggested-prompts-grid">
+          <button class="prompt-pill" data-prompt="Explain quantum computing in simple terms for a beginner.">
+            <span class="pill-icon">💡</span> Explain a topic
+          </button>
+          <button class="prompt-pill" data-prompt="Write a Python script to scrape top news headlines safely using requests and BeautifulSoup.">
+            <span class="pill-icon">🐍</span> Write Python code
+          </button>
+          <button class="prompt-pill" data-prompt="/summarize Artificial intelligence enables computer systems to perform tasks that typically require human intelligence, such as visual perception, speech recognition, decision-making, and language translation.">
+            <span class="pill-icon">📝</span> Summarize text
+          </button>
+          <button class="prompt-pill" data-prompt="/translate Spanish | Welcome to our project meeting! We are happy to have you with us.">
+            <span class="pill-icon">🌐</span> Translate a sentence
+          </button>
+          <button class="prompt-pill" id="prompt-help-files">
+            <span class="pill-icon">📂</span> Help me with my files
+          </button>
+        </div>
+      </div>
+
+      <!-- Messages will be injected here dynamically -->
+      <div id="messages-container" class="messages-container"></div>
+
+      <!-- Typing Indicator -->
+      <div class="typing-indicator hidden" id="typing-indicator">
+        <div class="typing-avatar">✨</div>
+        <div class="typing-bubble">
+          <span></span><span></span><span></span>
+        </div>
+        <span class="typing-label">Sara is thinking...</span>
+      </div>
+    </div>
+
+    <!-- Result / Download Card Container (For file operations) -->
+    <div id="result-panel-container" class="result-panel-container hidden"></div>
+
+    <!-- Chat Input Bar -->
+    <div class="chat-input-area">
+      <!-- File Preview Strip (if file is selected) -->
+      <div class="attachment-preview-bar hidden" id="attachment-preview-bar">
+        <div class="preview-item">
+          <span class="preview-icon" id="preview-file-icon">📄</span>
+          <span class="preview-name" id="preview-file-name">filename.pdf</span>
+          <span class="preview-size text-muted" id="preview-file-size">1.2 MB</span>
+          <button class="btn-close-sm" id="remove-attachment-btn">&times;</button>
+        </div>
+      </div>
+
+      <form class="chat-input-form" id="chat-input-form" onsubmit="return false;">
+        <input type="file" id="file-upload-input" class="hidden">
+        
+        <button type="button" class="input-btn" id="attach-file-btn" title="Upload PDF or Image">
+          📎
+        </button>
+
+        <textarea 
+          id="chat-textarea" 
+          class="chat-textarea" 
+          rows="1" 
+          placeholder="Message Sara AI or type / for commands..."
+          autocomplete="off"></textarea>
+
+        <button type="button" class="input-btn" id="clear-input-btn" title="Clear input text">
+          ✕
+        </button>
+
+        <button type="button" class="input-btn mic-btn" id="mic-quick-btn" title="Dictate with microphone">
+          🎙️
+        </button>
+
+        <button type="submit" class="send-btn" id="send-msg-btn" title="Send message">
+          ➤
+        </button>
+      </form>
+      <div class="input-footer-hint">
+        <span>Use <code>/help</code> for commands &bull; Press <strong>Enter</strong> to send, <strong>Shift+Enter</strong> for newline</span>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- FILE TOOLS MODAL -->
+<div id="file-tools-modal" class="modal-backdrop hidden">
+  <div class="modal-card modal-wide">
+    <div class="modal-header">
+      <h3><span class="icon">🛠️</span> Sara AI File Processing Tools</h3>
+      <button class="btn-close" id="close-file-tools-btn">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="tools-tab-buttons">
+        <button class="tab-btn active" data-tab="tab-pdf">📄 PDF Compression (iLovePDF)</button>
+        <button class="tab-btn" data-tab="tab-image">🖼️ Image Enhancement (Pillow / AI)</button>
+      </div>
+
+      <!-- Tab: PDF Compression -->
+      <div class="tab-pane active" id="tab-pdf">
+        <p class="tab-desc">Compress large PDF documents safely using the integrated iLovePDF engine to reduce file size while preserving readability.</p>
+        <div class="drop-zone" id="pdf-drop-zone">
+          <input type="file" id="pdf-file-input" accept=".pdf" class="hidden">
+          <div class="drop-content">
+            <span class="drop-icon">📄</span>
+            <p><strong>Click to browse</strong> or drag & drop a PDF here</p>
+            <small class="text-muted">Maximum file size: 50MB</small>
+          </div>
+        </div>
+        <div id="pdf-process-status" class="process-status-area hidden">
+          <div class="spinner"></div>
+          <span id="pdf-status-text">Uploading and compressing document...</span>
+        </div>
+        <div id="pdf-result-card-area"></div>
+      </div>
+
+      <!-- Tab: Image Enhancement -->
+      <div class="tab-pane" id="tab-image">
+        <p class="tab-desc">Enhance clarity, balance contrast, sharpen details, and improve colors locally using Pillow or Hugging Face AI.</p>
+        <div class="drop-zone" id="image-drop-zone">
+          <input type="file" id="image-file-input" accept="image/*" class="hidden">
+          <div class="drop-content">
+            <span class="drop-icon">🖼️</span>
+            <p><strong>Click to browse</strong> or drag & drop an image here</p>
+            <small class="text-muted">Supports PNG, JPG, JPEG, WEBP, BMP</small>
+          </div>
+        </div>
+        <div id="image-process-status" class="process-status-area hidden">
+          <div class="spinner"></div>
+          <span id="image-status-text">Enhancing image details...</span>
+        </div>
+        <div id="image-result-card-area"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="close-file-tools-footer-btn">Close</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/files.js') }}"></script>
+<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+{% endblock %}

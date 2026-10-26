@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Sara AI — Voice Assistant{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/voice.css') }}">
+{% endblock %}
+
+{% block body_class %}voice-body{% endblock %}
+
+{% block content %}
+<div class="voice-layout">
+  <!-- Top Bar -->
+  <header class="voice-header">
+    <div class="voice-brand">
+      <span class="voice-brand-logo">✨</span>
+      <div>
+        <h1>Sara AI</h1>
+        <span class="sub-title">Personal Voice Assistant</span>
+      </div>
+    </div>
+
+    <div class="voice-header-nav">
+      <div class="voice-status-badge">
+        <span class="status-dot online"></span>
+        <span id="voice-provider-tag">{{ status.active_provider }}</span>
+      </div>
+      <a href="/chat" class="btn btn-outline" title="Switch to Chat Assistant">
+        <span class="icon">💬</span> Chat Mode
+      </a>
+      <button class="btn-icon" id="open-settings-voice-btn" title="Settings">
+        ⚙️
+      </button>
+    </div>
+  </header>
+
+  <!-- Center Stage Voice Assistant Visualizer -->
+  <main class="voice-main">
+    <div class="voice-stage">
+      
+      <!-- Visualizer & Microphone Orb -->
+      <div class="voice-orb-wrapper">
+        <!-- Canvas Waveform & Canvas Visualizer -->
+        <canvas id="voice-canvas" width="400" height="400" class="voice-canvas"></canvas>
+
+        <!-- Pulsing animated rings -->
+        <div class="pulse-ring ring-1" id="pulse-ring-1"></div>
+        <div class="pulse-ring ring-2" id="pulse-ring-2"></div>
+        <div class="pulse-ring ring-3" id="pulse-ring-3"></div>
+
+        <!-- Center Glowing Button -->
+        <button class="mic-orb-btn state-idle" id="mic-toggle-btn" title="Tap to talk">
+          <div class="mic-orb-inner">
+            <span class="mic-icon" id="mic-icon">🎙️</span>
+          </div>
+        </button>
+      </div>
+
+      <!-- Voice State Label -->
+      <div class="voice-state-container">
+        <div class="state-pill state-idle" id="voice-state-pill">
+          <span class="state-indicator-dot"></span>
+          <span class="state-text" id="voice-state-text">Tap the microphone to talk to Sara.</span>
+        </div>
+      </div>
+
+      <!-- Dialogue Cards: Recognized Speech and Assistant Reply -->
+      <div class="dialogue-container">
+        <!-- User Speech Card -->
+        <div class="dialogue-card user-speech-card hidden" id="user-speech-card">
+          <div class="dialogue-sender">
+            <span class="sender-avatar">👤</span> You
+          </div>
+          <div class="dialogue-text" id="user-speech-text">
+            ...
+          </div>
+        </div>
+
+        <!-- Assistant Reply Card -->
+        <div class="dialogue-card assistant-speech-card hidden" id="assistant-speech-card">
+          <div class="dialogue-sender">
+            <span class="sender-avatar">✨</span> Sara AI
+          </div>
+          <div class="dialogue-text" id="assistant-speech-text">
+            ...
+          </div>
+          
+          <!-- Audio Player for PyTTSx3 or synthesized speech -->
+          <div class="audio-player-bar hidden" id="audio-player-bar">
+            <audio id="sara-audio-element" controls preload="auto"></audio>
+          </div>
+        </div>
+
+        <!-- Error Card with Retry Button -->
+        <div class="dialogue-card error-speech-card hidden" id="voice-error-card">
+          <div class="error-header">
+            <span class="error-icon">⚠️</span> Notice
+          </div>
+          <div class="error-text" id="voice-error-message">
+            An error occurred.
+          </div>
+          <button class="btn btn-primary btn-sm" id="voice-retry-btn">
+            🔄 Retry
+          </button>
+        </div>
+      </div>
+
+      <!-- Bottom Voice Controls -->
+      <div class="voice-controls-bar">
+        <!-- Stop/Interrupt Button -->
+        <button class="btn-control" id="stop-speaking-btn" title="Stop Speaking / Interrupt" disabled>
+          <span class="icon">⏹️</span> Stop
+        </button>
+
+        <!-- Mute/Unmute Toggle -->
+        <button class="btn-control" id="mute-toggle-btn" title="Mute Audio Playback">
+          <span class="icon" id="mute-icon">🔊</span> <span id="mute-label">Audio On</span>
+        </button>
+
+        <!-- Local / Cloud Recognition Info -->
+        <div class="voice-tech-tag" id="voice-tech-tag" title="Speech Pipeline">
+          🎙️ SpeechRecognition + Web Audio
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer Navigation -->
+  <footer class="voice-footer">
+    <p>Voice interactions are processed locally and securely &bull; Speak clearly into your microphone</p>
+  </footer>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/voice.js') }}"></script>
+{% endblock %}

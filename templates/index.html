@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Sara AI — Choose Your Assistant Experience{% endblock %}
+
+{% block body_class %}landing-body{% endblock %}
+
+{% block content %}
+<div class="landing-wrapper">
+  <!-- Top Navigation Header -->
+  <header class="landing-header">
+    <div class="brand">
+      <div class="brand-logo">
+        <span class="logo-sparkle">✨</span>
+      </div>
+      <div class="brand-info">
+        <h1>Sara AI</h1>
+        <span class="brand-tagline">Personal AI Chat & Voice Assistant</span>
+      </div>
+    </div>
+    
+    <div class="header-actions">
+      <div class="status-badge" id="system-status-badge">
+        <span class="status-dot online"></span>
+        <span class="status-label">{{ status.active_provider }}</span>
+      </div>
+      <button class="btn btn-ghost" id="open-settings-btn" title="System Settings">
+        <span class="icon">⚙️</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <main class="landing-main">
+    <div class="hero-text">
+      <h2>Welcome to your Personal AI Assistant</h2>
+      <p>Choose an assistant experience to get started. Switch anytime with a single click.</p>
+    </div>
+
+    <!-- Two Selection Cards -->
+    <div class="mode-selection-grid">
+      <!-- Mode A: Chat Assistant Card -->
+      <a href="/chat" class="mode-card mode-chat">
+        <div class="mode-card-badge">Mode A</div>
+        <div class="mode-card-icon">
+          <span class="icon-bubble">💬</span>
+        </div>
+        <div class="mode-card-content">
+          <h3>Chat Assistant</h3>
+          <p>Intelligent text conversation, code assistance, structured summaries, translations, and document processing tools.</p>
+          <ul class="mode-feature-list">
+            <li><span>✓</span> Full conversational context & history</li>
+            <li><span>✓</span> Code highlighting & instant copying</li>
+            <li><span>✓</span> PDF compression & Image enhancement</li>
+            <li><span>✓</span> Modular slash commands (<code>/help</code>, <code>/ask</code>)</li>
+          </ul>
+        </div>
+        <div class="mode-card-action">
+          <span class="btn btn-primary btn-block">Launch Chat Mode &rarr;</span>
+        </div>
+      </a>
+
+      <!-- Mode B: Voice Assistant Card -->
+      <a href="/voice" class="mode-card mode-voice">
+        <div class="mode-card-badge accent">Mode B</div>
+        <div class="mode-card-icon animated-mic">
+          <span class="icon-mic">🎙️</span>
+          <div class="pulse-ring"></div>
+        </div>
+        <div class="mode-card-content">
+          <h3>Voice Assistant</h3>
+          <p>Interactive voice experience with real-time speech recognition, responsive visualizer, and spoken audio responses.</p>
+          <ul class="mode-feature-list">
+            <li><span>✓</span> Tap-to-talk microphone interaction</li>
+            <li><span>✓</span> Live audio visualizer & status feedback</li>
+            <li><span>✓</span> Natural text-to-speech audio playback</li>
+            <li><span>✓</span> Voice interruption & mute controls</li>
+          </ul>
+        </div>
+        <div class="mode-card-action">
+          <span class="btn btn-accent btn-block">Launch Voice Mode &rarr;</span>
+        </div>
+      </a>
+    </div>
+
+    <!-- Quick Utilities Strip -->
+    <div class="quick-utilities-bar">
+      <div class="utility-item">
+        <span class="u-icon">📄</span>
+        <span><strong>iLovePDF</strong> Compression</span>
+      </div>
+      <div class="utility-item">
+        <span class="u-icon">🖼️</span>
+        <span><strong>Pillow / AI</strong> Image Enhancement</span>
+      </div>
+      <div class="utility-item">
+        <span class="u-icon">⚡</span>
+        <span><strong>Hugging Face & TokenMix</strong> Ready</span>
+      </div>
+      <div class="utility-item">
+        <span class="u-icon">🔒</span>
+        <span><strong>Local & Safe</strong> Privacy-first Storage</span>
+      </div>
+    </div>
+  </main>
+
+  <footer class="landing-footer">
+    <p>Sara AI &bull; Built with Python, Flask & Modern Web Technologies &bull; Windows 11 Local Edition</p>
+  </footer>
+</div>
+{% endblock %}

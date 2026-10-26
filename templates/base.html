@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Sara AI — Personal AI Chat & Voice Assistant{% endblock %}</title>
+  
+  <!-- Modern Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- Base Styles -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Settings Modal (Accessible globally) -->
+  <div id="settings-modal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3><span class="icon">⚙️</span> Sara AI Settings</h3>
+        <button class="btn-close" id="close-settings-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="setting-group">
+          <label>Active AI Provider</label>
+          <div class="setting-value" id="settings-active-provider">Loading...</div>
+          <small class="text-muted">Configured via <code>AI_PROVIDER</code> in your local <code>.env</code> file.</small>
+        </div>
+
+        <div class="setting-group">
+          <label>Connected Providers</label>
+          <div class="provider-status-list" id="settings-provider-list">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <label>Voice Speech Output</label>
+          <div class="voice-config-status" id="settings-voice-status">
+            Local TTS (pyttsx3) & Web Speech API Ready
+          </div>
+        </div>
+
+        <div class="alert alert-info">
+          <span>💡</span> To update API keys or models, edit <code>.env</code> in your project root and restart Sara AI.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="save-settings-btn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main View Content -->
+  {% block content %}{% endblock %}
+
+  <!-- Base JS Scripts -->
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>
