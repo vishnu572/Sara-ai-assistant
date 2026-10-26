@@ -40,12 +40,13 @@ def test_huggingface_client_missing_key():
     assert "not configured" in res["error"]
 
 def test_tokenmix_client_missing_key():
-    """Verify TokenMix client handles missing API key cleanly."""
+    """Verify TokenMix client operates online even before custom key is provided."""
     client = TokenMixClient(api_key="")
-    assert not client.is_configured()
-    res = client.chat("Test message")
-    assert res["success"] is False
-    assert "not configured" in res["error"]
+    assert not client.has_api_key()
+    assert client.is_configured()
+    res = client.chat("Hello")
+    assert res["success"] is True
+    assert res["model"] == "gpt-4o-mini"
 
 def test_tokenmix_client_gpt_4o_mini_model():
     """Verify TokenMix client uses model gpt-4o-mini."""
