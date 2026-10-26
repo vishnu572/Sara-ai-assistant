@@ -30,8 +30,8 @@ ALLOWED_EXTENSIONS = (
 )
 
 # AI Provider Configuration
-# Supported values: 'auto', 'huggingface', 'tokenmix', 'openai'
-AI_PROVIDER = os.getenv("AI_PROVIDER", "auto").lower()
+# Supported values: 'tokenmix' (default primary), 'auto', 'huggingface', 'openai'
+AI_PROVIDER = os.getenv("AI_PROVIDER", "tokenmix").lower()
 
 # Hugging Face Settings
 HF_TOKEN = os.getenv("HF_TOKEN", "")
@@ -39,10 +39,11 @@ HF_MODEL = os.getenv("HF_MODEL", "mistralai/Mistral-7B-Instruct-v0.3")
 HF_API_URL = os.getenv("HF_API_URL", "https://api-inference.huggingface.co/models/")
 HF_IMAGE_MODEL = os.getenv("HF_IMAGE_MODEL", "black-forest-labs/FLUX.1-dev")
 
-# TokenMix Settings
-TOKENMIX_API_KEY = os.getenv("TOKENMIX_API_KEY", "")
-TOKENMIX_API_URL = os.getenv("TOKENMIX_API_URL", "https://api.tokenmix.ai/v1/chat/completions")
-TOKENMIX_MODEL = os.getenv("TOKENMIX_MODEL", "tokenmix-chat-v1")
+# TokenMix Settings (Primary Replier with gpt-4o-mini)
+TOKENMIX_API_KEY = os.getenv("TOKENMIX_API_KEY") or os.getenv("OPENAI_API_KEY") or ""
+TOKENMIX_BASE_URL = os.getenv("TOKENMIX_BASE_URL", "https://api.tokenmix.ai/v1").rstrip("/")
+TOKENMIX_API_URL = os.getenv("TOKENMIX_API_URL", f"{TOKENMIX_BASE_URL}/chat/completions")
+TOKENMIX_MODEL = os.getenv("TOKENMIX_MODEL", "gpt-4o-mini")
 
 # OpenAI Settings (optional compatibility provider)
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")

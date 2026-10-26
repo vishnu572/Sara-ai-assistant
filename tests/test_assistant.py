@@ -47,13 +47,41 @@ def test_tokenmix_client_missing_key():
     assert res["success"] is False
     assert "not configured" in res["error"]
 
+def test_tokenmix_client_gpt_4o_mini_model():
+    """Verify TokenMix client uses model gpt-4o-mini."""
+    client = TokenMixClient(api_key="mock_key", model="gpt-4o-mini")
+    assert client.model == "gpt-4o-mini"
+    assert client.is_configured()
+
+@patch("services.tokenmix_client.requests.post")
+def test_tokenmix_chat_success(mock_post):
+    """Test successful TokenMix chat completion with gpt-4o-mini."""
+    mock_post.return_value.status_code = 200
+    mock_post.return_value.json.return_value = {
+        "choices": [
+            {
+                "message": {
+                    "role": "assistant",
+                    "content": "Hello! I am Sara AI, powered by TokenMix gpt-4o-mini."
+                }
+            }
+        ]
+    }
+
+    client = TokenMixClient(api_key="mock_tokenmix_key", model="gpt-4o-mini")
+    res = client.chat("Hello!")
+    assert res["success"] is True
+    assert "TokenMix gpt-4o-mini" in res["text"]
+    assert res["model"] == "gpt-4o-mini"
+
 def test_assistant_provider_status_safe():
     """Verify provider status endpoint does not leak secrets."""
     service = AssistantService()
     status = service.get_provider_status()
     assert "active_provider" in status
     assert "providers" in status
-    # Verify no raw API keys are exposed
+    assert "tokenmix" in status["providers"]
+    assert status["providers"]["tokenmix"]["model"] == "gpt-4o-mini"
     for key, p in status["providers"].items():
         assert "token" not in p
         assert "api_key" not in p

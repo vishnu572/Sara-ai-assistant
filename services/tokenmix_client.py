@@ -3,24 +3,27 @@ import json
 import logging
 from typing import List, Dict, Any, Optional
 import config
-from services.personality import format_messages_for_chat_api, format_prompt_for_model
+from services.personality import format_messages_for_chat_api, get_system_prompt
 
 logger = logging.getLogger(__name__)
 
 class TokenMixClient:
     """
     Dedicated client for TokenMix API.
-    Maintains configurable URL, headers, payload, and response parser.
+    Configured with model 'gpt-4o-mini'.
+    Supports both direct HTTP chat/completions and OpenAI-compatible client routing.
     """
     def __init__(
         self,
         api_key: Optional[str] = None,
         api_url: Optional[str] = None,
+        base_url: Optional[str] = None,
         model: Optional[str] = None
     ):
         self.api_key = api_key or config.TOKENMIX_API_KEY
+        self.base_url = base_url or config.TOKENMIX_BASE_URL
         self.api_url = api_url or config.TOKENMIX_API_URL
-        self.model = model or config.TOKENMIX_MODEL
+        self.model = model or config.TOKENMIX_MODEL or "gpt-4o-mini"
         self.timeout = config.API_TIMEOUT
 
     def is_configured(self) -> bool:
@@ -33,27 +36,31 @@ class TokenMixClient:
             "Accept": "application/json"
         }
         if self.api_key:
-            headers["Authorization"] = f"Bearer {self.api_key.strip()}"
-            headers["x-api-key"] = self.api_key.strip()
+            clean_key = self.api_key.strip()
+            headers["Authorization"] = f"Bearer {clean_key}"
+            headers["x-api-key"] = clean_key
         return headers
 
     def chat(self, message: str, history: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
-        """Send chat messages to TokenMix endpoint and return response."""
+        """
+        Send chat messages to TokenMix API using model gpt-4o-mini.
+        """
         if not self.is_configured():
             return {
                 "success": False,
-                "error": "TokenMix API key (TOKENMIX_API_KEY) is not configured in .env."
+                "error": "TokenMix API key is not configured. Please add `TOKENMIX_API_KEY` into your `.env` file."
             }
 
         messages = format_messages_for_chat_api(message, history=history)
-        
+
         payload = {
             "model": self.model,
             "messages": messages,
             "temperature": 0.7,
-            "max_tokens": 800
+            "max_tokens": 1024
         }
 
+        # Try Method 1: Direct HTTP request to TokenMix completions endpoint
         try:
             response = requests.post(
                 self.api_url,
@@ -82,29 +89,29 @@ class TokenMixClient:
                     return {
                         "success": True,
                         "text": content.strip(),
-                        "model": self.model
+                        "model": self.model,
+                        "provider": f"TokenMix ({self.model})"
                     }
                 else:
                     return {
                         "success": False,
-                        "error": "TokenMix returned an unexpected response structure."
+                        "error": "TokenMix returned an unexpected JSON structure."
                     }
 
             elif response.status_code in (401, 403):
                 return {
                     "success": False,
-                    "error": "TokenMix authentication failed. Please check TOKENMIX_API_KEY in .env."
+                    "error": "TokenMix authentication failed. Please verify your TOKENMIX_API_KEY in .env."
                 }
             elif response.status_code == 429:
                 return {
                     "success": False,
-                    "error": "TokenMix rate limit reached. Please wait before retrying."
+                    "error": "TokenMix rate limit reached. Please wait a moment before sending another message."
                 }
             else:
-                return {
-                    "success": False,
-                    "error": f"TokenMix API error ({response.status_code}): {response.text[:200]}"
-                }
+                # If direct HTTP gave 404 or other code, attempt OpenAI SDK compatible routing
+                logger.warning(f"Direct TokenMix HTTP returned {response.status_code}, trying SDK client fallback...")
+                return self._chat_via_openai_sdk(messages)
 
         except requests.Timeout:
             return {
@@ -112,7 +119,33 @@ class TokenMixClient:
                 "error": f"TokenMix request timed out after {self.timeout}s."
             }
         except requests.RequestException as e:
-            logger.error(f"TokenMix request error: {e}")
+            logger.warning(f"Direct TokenMix HTTP error: {e}. Trying SDK client fallback...")
+            return self._chat_via_openai_sdk(messages)
+
+    def _chat_via_openai_sdk(self, messages: List[Dict[str, str]]) -> Dict[str, Any]:
+        """
+        Fallback using openai SDK with TokenMix base_url.
+        """
+        try:
+            import openai
+            client = openai.OpenAI(
+                api_key=self.api_key.strip(),
+                base_url=self.base_url
+            )
+            resp = client.chat.completions.create(
+                model=self.model,
+                messages=messages,
+                timeout=self.timeout
+            )
+            answer = resp.choices[0].message.content or ""
+            return {
+                "success": True,
+                "text": answer.strip(),
+                "model": self.model,
+                "provider": f"TokenMix ({self.model})"
+            }
+        except Exception as e:
+            logger.error(f"TokenMix OpenAI SDK compatibility error: {e}")
             return {
                 "success": False,
                 "error": f"Could not connect to TokenMix API: {str(e)}"

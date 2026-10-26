@@ -152,13 +152,27 @@ def execute_command(text: str, context: Optional[Dict[str, Any]] = None) -> Dict
             f"- **Configured Mode**: `{status['mode']}`",
             f"- **Active Provider**: **{status['active_provider']}**\n",
             "| Provider | Status | Configured Model |",
-            "| :--- | :--- | :--- |",
-            f"| Hugging Face | {'✅ Configured' if providers['huggingface']['configured'] else '❌ Not Configured'} | `{providers['huggingface']['model']}` |",
-            f"| TokenMix | {'✅ Configured' if providers['tokenmix']['configured'] else '❌ Not Configured'} | `{providers['tokenmix']['model']}` |",
-            f"| OpenAI (Compat) | {'✅ Configured' if providers['openai']['configured'] else '❌ Not Configured'} | `{providers['openai']['model']}` |",
-            f"| Local Engine | ✅ Active (Fallback) | `{providers['local']['model']}` |\n",
-            "> *Note: API keys are securely loaded from your local `.env` and never displayed.*"
+            "| :--- | :--- | :--- |"
         ]
+        
+        # TokenMix (Primary)
+        if "tokenmix" in providers:
+            tm = providers["tokenmix"]
+            badge = "✅ Configured" if tm["configured"] else "❌ Not Configured"
+            text_lines.append(f"| TokenMix (Primary) | {badge} | `{tm.get('model', 'gpt-4o-mini')}` |")
+            
+        # Hugging Face
+        if "huggingface" in providers:
+            hf = providers["huggingface"]
+            badge = "✅ Configured" if hf["configured"] else "❌ Not Configured"
+            text_lines.append(f"| Hugging Face | {badge} | `{hf.get('model', 'default')}` |")
+
+        # Local Engine
+        if "local" in providers:
+            loc = providers["local"]
+            text_lines.append(f"| Local Engine | ✅ Active (Fallback) | `{loc.get('model', 'default')}` |\n")
+
+        text_lines.append("> *Note: API keys are securely loaded from your local `.env` and never displayed.*")
         return {
             "success": True,
             "command": "provider",
