@@ -12,6 +12,7 @@ Sara AI is a modern, intelligent, and user-friendly personal AI assistant built 
 ## ✨ Key Features
 
 ### 💬 Mode A: Simple Chat Assistant
+
 - **Modern Chat Interface**: Conversational flow with user and assistant bubbles, auto-expanding inputs, and code syntax highlighting with one-click copy.
 - **Persistent Chat History**: Fast local SQLite storage for saving, continuing, and deleting previous conversations.
 - **Context-Aware Responses**: Multi-turn dialogue context maintained across conversation sessions.
@@ -28,6 +29,7 @@ Sara AI is a modern, intelligent, and user-friendly personal AI assistant built 
   - `/voice` & `/chat`: Seamless mode switching.
 
 ### 🎙️ Mode B: Voice Assistant
+
 - **Dedicated Voice Interface**: Centered around an animated glowing microphone orb with real-time waveform visualizer.
 - **5 Voice States**:
   1. **Idle**: "Tap the microphone to talk to Sara."
@@ -42,6 +44,7 @@ Sara AI is a modern, intelligent, and user-friendly personal AI assistant built 
   - Includes playback interruption, stop controls, and mute toggle.
 
 ### 📄 Smart File Processing & Result Cards
+
 - **iLovePDF Integration**: Upload PDF documents, compress them via the official iLovePDF REST API, and download optimized files.
 - **Image Enhancement**: Enhance contrast, balance colors, and sharpen clarity locally via Pillow or through Hugging Face image models.
 - **Result Component**: Operation name, original filename & size, result filename & size, savings percentage, preview, and download button.
@@ -56,6 +59,7 @@ Sara AI/
 ├── app.py                         # Flask application & API routes
 ├── config.py                      # Centralized environment configuration
 ├── requirements.txt               # Pinned Python package dependencies
+├── render.yaml                    # Free Render web service Blueprint
 ├── .env.example                   # Environment configuration template
 ├── .gitignore                     # Git ignore rules (secrets & temp files)
 ├── README.md                      # Documentation & setup guide
@@ -106,9 +110,23 @@ Sara AI/
 
 ---
 
+## ☁️ Free Deployment on Render
+
+This repository includes a Render Blueprint in `render.yaml` for a free Python web service.
+
+1. Push the project to a GitHub repository you control. Keep `.env` out of Git; `.gitignore` already excludes it.
+2. In the [Render Dashboard](https://dashboard.render.com/), choose **New → Blueprint** and connect that repository.
+3. Review the `sara-ai-assistant` service and enter your `TOKENMIX_API_KEY` when prompted. Render generates `SECRET_KEY`; do not add API keys to `render.yaml`.
+4. Deploy the Blueprint and open the `.onrender.com` URL shown on the service page.
+
+The free service sleeps after 15 minutes without traffic, so its first request after idle can take about a minute. Its filesystem is temporary: SQLite conversation history, uploaded files, and generated files are lost when the service restarts, redeploys, or sleeps. Free Render services do not support persistent disks. The public URL also allows visitors to use the configured AI provider, so monitor API usage and quotas. Voice transcription requires an internet connection.
+
+See Render's [free instance limitations](https://render.com/docs/free), [Flask deployment guide](https://render.com/docs/deploy-flask), and [Blueprint reference](https://render.com/docs/blueprint-spec).
+
 ## 🚀 Windows 11 Quick Start
 
 ### 1. Prerequisites
+
 - **Windows 11** (64-bit)
 - **Python 3.10+** (Python 3.12 recommended)
 - A working microphone and speaker setup.
@@ -143,22 +161,28 @@ Copy-Item .env.example .env
 Open `.env` and fill in your desired API credentials:
 
 ```ini
-# AI Provider ('auto', 'huggingface', 'tokenmix', 'openai')
+# AI Provider ('tokenmix', 'openai', 'huggingface', or 'auto')
 AI_PROVIDER=auto
 
 # Hugging Face Inference Token (Get from https://huggingface.co/settings/tokens)
 HF_TOKEN=your_huggingface_token_here
 HF_MODEL=mistralai/Mistral-7B-Instruct-v0.3
+HF_IMAGE_MODEL=black-forest-labs/FLUX.1-dev
 
-# TokenMix API Key (Optional)
+# TokenMix API
 TOKENMIX_API_KEY=your_tokenmix_key_here
+TOKENMIX_MODEL=gpt-4o-mini
+TOKENMIX_FALLBACK_MODEL=gpt-6-luna
+TOKENMIX_API_URL=https://api.tokenmix.ai/v1/chat/completions
 
 # iLovePDF API Keys (Get free keys from https://developer.ilovepdf.com)
 ILOVEPDF_PUBLIC_KEY=your_public_key_here
 ILOVEPDF_PRIVATE_KEY=your_private_key_here
 ```
 
-> **Note**: Sara AI is designed with an **intelligent local fallback engine**. Even without external cloud API keys, Sara AI will run smoothly in local offline mode for commands, local chat, Pillow image enhancement, and voice interaction!
+Set `AI_PROVIDER` to choose a chat provider. `auto` tries configured providers in TokenMix, OpenAI, then Hugging Face order; the selected provider mode calls only that provider. TokenMix retries its fallback model only when the primary model is explicitly unavailable. PDF compression uses iLovePDF, while image enhancement uses Pillow by default and can use Hugging Face when an appropriate image-to-image model is configured.
+
+For PDF compression, add your iLovePDF project public key to `ILOVEPDF_PUBLIC_KEY` in `.env`. The app authenticates with iLovePDF, uploads the selected PDF to its task server, processes it, and saves the returned PDF in `outputs/`. Keep API credentials in `.env`; do not put real keys in `.env.example`.
 
 ### 4. Run the Application
 
@@ -167,6 +191,7 @@ python app.py
 ```
 
 Open your browser and navigate to:
+
 ```
 http://127.0.0.1:5000
 ```
