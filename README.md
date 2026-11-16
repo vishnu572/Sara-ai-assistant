@@ -60,6 +60,7 @@ Sara AI/
 ├── config.py                      # Centralized environment configuration
 ├── requirements.txt               # Pinned Python package dependencies
 ├── render.yaml                    # Free Render web service Blueprint
+├── vercel.json                    # Vercel Python function configuration
 ├── .env.example                   # Environment configuration template
 ├── .gitignore                     # Git ignore rules (secrets & temp files)
 ├── README.md                      # Documentation & setup guide
@@ -122,6 +123,14 @@ This repository includes a Render Blueprint in `render.yaml` for a free Python w
 The free service sleeps after 15 minutes without traffic, so its first request after idle can take about a minute. Its filesystem is temporary: SQLite conversation history, uploaded files, and generated files are lost when the service restarts, redeploys, or sleeps. Free Render services do not support persistent disks. The public URL also allows visitors to use the configured AI provider, so monitor API usage and quotas. Voice transcription requires an internet connection.
 
 See Render's [free instance limitations](https://render.com/docs/free), [Flask deployment guide](https://render.com/docs/deploy-flask), and [Blueprint reference](https://render.com/docs/blueprint-spec).
+
+## ☁️ Deploy on Vercel
+
+The Vercel project root is the repository root: the directory containing `vercel.json`, `app.py`, and `requirements.txt`. In the Vercel project settings, set **Root Directory** to `.` (or leave it at the repository root), then deploy.
+
+Add `TOKENMIX_API_KEY` and a strong `SECRET_KEY` under **Project Settings → Environment Variables** before deploying. Do not commit these values or put them in `vercel.json`.
+
+Vercel runs the Flask app as a serverless function. SQLite data, uploaded files, and generated files are placed under `/tmp` when deployed; this storage is temporary and may not be shared across function instances. Use an external database and object storage if you need persistent history or files. Features that require native audio tools may also be limited in Vercel's serverless environment.
 
 ## 🚀 Windows 11 Quick Start
 

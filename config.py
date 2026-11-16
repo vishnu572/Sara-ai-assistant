@@ -8,14 +8,19 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent
 
 # File storage folders
-UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
-OUTPUT_FOLDER = os.path.join(BASE_DIR, "outputs")
-DATABASE_PATH = os.path.join(BASE_DIR, "database", "sara_ai.db")
+if os.getenv("VERCEL") == "1":
+    STORAGE_DIR = Path("/tmp/sara-ai")
+else:
+    STORAGE_DIR = BASE_DIR
+
+UPLOAD_FOLDER = os.path.join(STORAGE_DIR, "uploads")
+OUTPUT_FOLDER = os.path.join(STORAGE_DIR, "outputs")
+DATABASE_PATH = os.path.join(STORAGE_DIR, "database", "sara_ai.db")
 
 # Ensure required directories exist
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
-os.makedirs(os.path.join(BASE_DIR, "database"), exist_ok=True)
+os.makedirs(os.path.dirname(DATABASE_PATH), exist_ok=True)
 
 # Secret configuration
 SECRET_KEY = os.getenv("SECRET_KEY", "sara-ai-local-secret-key-2026")
