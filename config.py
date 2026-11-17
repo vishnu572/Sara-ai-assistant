@@ -1,4 +1,5 @@
 import os
+import tempfile
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -8,8 +9,8 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent
 
 # File storage folders
-if os.getenv("VERCEL") == "1":
-    STORAGE_DIR = Path("/tmp/sara-ai")
+if os.getenv("VERCEL") or os.getenv("VERCEL_ENV"):
+    STORAGE_DIR = Path(tempfile.gettempdir()) / "sara-ai"
 else:
     STORAGE_DIR = BASE_DIR
 
